@@ -19,6 +19,7 @@ class CsvOutput(FileOutput):
         self._fieldnames = None
         self._warned_once = set()
         self._disable_warnings = False
+        self._file_name = file_name
 
     @property
     def types_accepted(self):
@@ -42,12 +43,24 @@ class CsvOutput(FileOutput):
                 self._writer.writeheader()
 
             if to_csv.keys() != self._fieldnames:
-                self._warn('Inconsistent TabularInput keys detected. '
-                           'CsvOutput keys: {}. '
-                           'TabularInput keys: {}. '
-                           'Did you change key sets after your first '
-                           'logger.log(TabularInput)?'.format(
-                               set(self._fieldnames), set(to_csv.keys())))
+                # Get data from current csv
+                with open(self._file_name, 'r') as f:
+                    reader = csv.DictReader(f)
+
+                    # Add new fields to self._fieldnames
+                    for key in to_csv.keys():
+                        if key not in self._fieldnames:
+                            self._fieldnames.add(key)
+                    
+                    # Write back to csv with new fieldnames
+                    self._writer = csv.DictWriter(
+                        self._log_file,
+                        fieldnames=self._fieldnames,
+                        extrasaction='raise')
+
+                    self._log_file.seek(0)
+                    self._writer.writeheader()
+                    self._writer.writerows(reader)
 
             self._writer.writerow(to_csv)
 

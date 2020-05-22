@@ -54,7 +54,7 @@ class TestCsvOutput:
         self.csv_output.dump()
 
         correct = [
-            {'foo': str(foo)},
+            {'foo': str(foo), 'bar': ''},
             {'foo': str(foo * 2), 'bar': str(bar * 2)},
         ]
         self.assert_csv_matches(correct)
@@ -69,7 +69,7 @@ class TestCsvOutput:
         self.csv_output.record(self.tabular)
 
         self.tabular.record('foo', foo)
-        
+
         with pytest.warns(CsvOutputWarning):
             self.csv_output.record(self.tabular)
 
@@ -80,7 +80,7 @@ class TestCsvOutput:
 
         correct = [
             {'foo': str(foo), 'bar': str(bar * 2)},
-            {'foo': str(foo * 2)},
+            {'foo': str(foo * 2), 'bar': ''},
         ]
         self.assert_csv_matches(correct)
 

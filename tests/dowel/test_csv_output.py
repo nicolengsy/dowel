@@ -44,11 +44,6 @@ class TestCsvOutput:
 
         self.tabular.record('foo', foo * 2)
         self.tabular.record('bar', bar * 2)
-
-        with pytest.warns(CsvOutputWarning):
-            self.csv_output.record(self.tabular)
-
-        # this should not produce a warning, because we only warn once
         self.csv_output.record(self.tabular)
 
         self.csv_output.dump()
@@ -69,11 +64,6 @@ class TestCsvOutput:
         self.csv_output.record(self.tabular)
 
         self.tabular.record('foo', foo)
-
-        with pytest.warns(CsvOutputWarning):
-            self.csv_output.record(self.tabular)
-
-        # this should not produce a warning, because we only warn once
         self.csv_output.record(self.tabular)
 
         self.csv_output.dump()

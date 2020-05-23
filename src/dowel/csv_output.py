@@ -43,22 +43,23 @@ class CsvOutput(FileOutput):
             if to_csv.keys() != self._fieldnames:
                 # Get data from current csv
                 with open(self._file_name, 'r') as f:
+                    # Save current csv in list of dicts
                     reader = csv.DictReader(f)
+                    oldData = []
+                    for row in reader:
+                        oldData.append(row)
 
                     # Add new fields to self._fieldnames
                     for key in to_csv.keys():
                         if key not in self._fieldnames:
                             self._fieldnames.add(key)
                     
-                    # Write back to csv with new fieldnames
-                    self._writer = csv.DictWriter(
-                        self._log_file,
-                        fieldnames=self._fieldnames,
-                        extrasaction='raise')
-
+                    # Write back new header & old data to csv
+                    self._writer.fieldnames = self._fieldnames
                     self._log_file.seek(0)
                     self._writer.writeheader()
-                    self._writer.writerows(reader)
+                    for row in oldData:
+                        self._writer.writerow(row)
 
             self._writer.writerow(to_csv)
 

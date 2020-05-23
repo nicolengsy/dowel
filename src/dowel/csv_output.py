@@ -17,8 +17,7 @@ class CsvOutput(FileOutput):
         super().__init__(file_name)
         self._writer = None
         self._fieldnames = None
-        self._warned_once = set()
-        self._disable_warnings = False
+        self._file_name = file_name
 
     @property
     def types_accepted(self):
@@ -42,12 +41,25 @@ class CsvOutput(FileOutput):
                 self._writer.writeheader()
 
             if to_csv.keys() != self._fieldnames:
-                self._warn('Inconsistent TabularInput keys detected. '
-                           'CsvOutput keys: {}. '
-                           'TabularInput keys: {}. '
-                           'Did you change key sets after your first '
-                           'logger.log(TabularInput)?'.format(
-                               set(self._fieldnames), set(to_csv.keys())))
+                # Get data from current csv
+                with open(self._file_name, 'r') as f:
+                    # Save current csv in list of dicts
+                    reader = csv.DictReader(f)
+                    oldData = []
+                    for row in reader:
+                        oldData.append(row)
+
+                    # Add new fields to self._fieldnames
+                    for key in to_csv.keys():
+                        if key not in self._fieldnames:
+                            self._fieldnames.add(key)
+                    
+                    # Write back new header & old data to csv
+                    self._writer.fieldnames = self._fieldnames
+                    self._log_file.seek(0)
+                    self._writer.writeheader()
+                    for row in oldData:
+                        self._writer.writerow(row)
 
             self._writer.writerow(to_csv)
 
@@ -56,24 +68,3 @@ class CsvOutput(FileOutput):
         else:
             raise ValueError('Unacceptable type.')
 
-    def _warn(self, msg):
-        """Warns the user using warnings.warn.
-
-        The stacklevel parameter needs to be 3 to ensure the call to logger.log
-        is the one printed.
-        """
-        if not self._disable_warnings and msg not in self._warned_once:
-            warnings.warn(
-                colorize(msg, 'yellow'), CsvOutputWarning, stacklevel=3)
-        self._warned_once.add(msg)
-        return msg
-
-    def disable_warnings(self):
-        """Disable logger warnings for testing."""
-        self._disable_warnings = True
-
-
-class CsvOutputWarning(UserWarning):
-    """Warning class for CsvOutput."""
-
-    pass
